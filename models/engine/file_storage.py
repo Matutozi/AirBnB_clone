@@ -35,9 +35,28 @@ class FileStorage:
 
     def save(self):
         """Serialzes __objects to JSON file."""
-        dictionary = dict()
-        for k, v in type(self).__objects.items():
-            dictionary[k] = v.to_dict()
+        from models.city import City
+        from models.user import User
+        from models.place import Place
+        from models.state import State
+        from models.review import Review
+        from models.amenity import Amenity
+        classes = {
+            'User': User,
+            'BaseModel': BaseModel,
+            'City': City,
+            'Place': Place,
+            'State': State,
+            'Review': Review,
+            'Amenity': Amenity,
+        }
+
+        dictionary = {}
+        for key, obj in type(self).__objects.items():
+            class_name = obj.__class__.__name__
+            if class_name in classes:
+                dictionary[key] = obj.to_dict()
+
         with open(type(self).__file_path, 'w', encoding='utf-8') as j_file:
             json.dump(dictionary, j_file)
 
@@ -50,11 +69,22 @@ class FileStorage:
         from models.state import State
         from models.review import Review
         from models.amenity import Amenity
+        classes = {
+        "City": City,
+        "User": User,
+        "Place": Place,
+        "State": State,
+        "Review": Review,
+        "Amenity": Amenity,
+        "BaseModel": BaseModel,
+        }
         try:
             with open(type(self).__file_path, 'r', encoding='utf-8') as j_file:
                 json_load = json.load(j_file)
-            for k, v in json_load.items():
-                FileStorage.__objects[k] = BaseModel(**v)
+            for key, value in json_load.items():
+                class_name = value.get('__class__')
+                if class_name in classes:
+                    FileStorage.__objects[key] = classes[class_name](**value)
         except json.JSONDecodeError:
             pass
         except FileNotFoundError:

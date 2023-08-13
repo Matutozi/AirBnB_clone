@@ -108,26 +108,21 @@ class HBNBCommand(cmd.Cmd):
     def do_all(self, line):
         """Prints all instances based on the class name or all instances"""
         args = line.split()
-        if not args:
-            print("** class name missing **")
-            return
+        if args and args[0] == "all":
+            class_name = args[1] if len(args) > 1 else None
+            if class_name is None or class_name in self.MODELS:
+                all_objects = storage.all()
+                instances = [
+                    str(instance) for key, instance in all_objects.items()
+                    if class_name is None or \
+                        instance.__class__.__name__ == class_name
 
-        class_name = args[0]
-        if class_name == "all":
-            all_objects = storage.all()
-            instances = [
-                str(instance) for key, instance in all_objects.items()
-            ]
-            print(instances)
-        elif class_name in self.MODELS:
-            all_objects = storage.all()
-            instances = [
-                str(instance) for key, instance in all_objects.items()
-                if instance.__class__.__name__ == class_name
-            ]
-            print(instances)
+                ]
+                print(instances)
+            else:
+                print("** class doesn't exist **")
         else:
-            print("** class doesn't exist **")
+            print("** Unknown syntax: {}".format(line))
 
     def do_update(self, line):
         """Updates an instance based on the class name and id"""
@@ -179,6 +174,23 @@ class HBNBCommand(cmd.Cmd):
             instance.save()
         else:
             print("** attribute doesn't exist **")
+
+    def default(self, line):
+        """Handles default command parsing, including class_name.all() syntax"""
+        parts = line.split('.')
+        if len(parts) == 2 and parts[1] == "all()":
+            class_name = parts[0]
+            if class_name in self.MODELS:
+                all_objects = storage.all()
+                instances = [
+                    str(instance) for key, instance in all_objects.items()
+                    if instance.__class__.__name__ == class_name
+                ]
+                print(instances)
+            else:
+                print("** class doesn't exist **")
+        else:
+            print("*** Unknown syntax: {}".format(line))
 
 
 if __name__ == "__main__":
